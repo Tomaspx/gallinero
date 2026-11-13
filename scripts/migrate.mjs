@@ -3,10 +3,11 @@
 import postgres from "postgres";
 import { randomBytes } from "node:crypto";
 
-const url =
-  process.env.DATABASE_URL ||
-  process.env.POSTGRES_URL ||
-  process.env.POSTGRES_URL_NON_POOLING;
+// DATABASE_URL, POSTGRES_URL o la misma con el prefijo que haya puesto Vercel (ej. STORAGE_POSTGRES_URL).
+const claves = Object.keys(process.env);
+const pooler = claves.find((k) => /(^|_)POSTGRES_URL$/.test(k));
+const directa = claves.find((k) => /(^|_)POSTGRES_URL_NON_POOLING$/.test(k));
+const url = process.env.DATABASE_URL || (pooler && process.env[pooler]) || (directa && process.env[directa]);
 
 const migraciones = [
   {

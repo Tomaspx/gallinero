@@ -1,7 +1,16 @@
 import postgres from "postgres";
 
-export const dbUrl =
-  process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING;
+/** Busca la conexión: DATABASE_URL, POSTGRES_URL o la misma con el prefijo que haya puesto Vercel (ej. STORAGE_POSTGRES_URL). */
+function buscarUrl(): string | undefined {
+  const env = process.env;
+  if (env.DATABASE_URL) return env.DATABASE_URL;
+  const claves = Object.keys(env);
+  const pooler = claves.find((k) => /(^|_)POSTGRES_URL$/.test(k));
+  const directa = claves.find((k) => /(^|_)POSTGRES_URL_NON_POOLING$/.test(k));
+  return (pooler && env[pooler]) || (directa && env[directa]) || undefined;
+}
+
+export const dbUrl = buscarUrl();
 
 /** Quita los parámetros extra (sslmode, supa, pgbouncer…) que agrega Supabase: el SSL se configura aparte. */
 export function limpiarUrl(url: string) {
